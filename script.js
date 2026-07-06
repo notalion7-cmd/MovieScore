@@ -19,14 +19,14 @@ let genreIndex = new Map();
 let actorIndex = new Map();
 let directorIndex = new Map();
 
+let dataReady = false;
+
 // --------------------
 // Page Loaded
 // --------------------
 
 document.addEventListener("DOMContentLoaded", () => {
-
     loadData();
-
 });
 
 // --------------------
@@ -37,23 +37,16 @@ async function loadData() {
 
     try {
 
-        const moviePromise = loadCSV("tmdb_5000_movies.csv");
-        const creditPromise = loadCSV("tmdb_5000_credits.csv");
+        const response = await fetch("movies_processed.json");
 
-        const result = await Promise.all([
-            moviePromise,
-            creditPromise
-        ]);
+        if (!response.ok) {
+            throw new Error("Cannot load movies_processed.json");
+        }
 
-        movies = result[0];
-        credits = result[1];
-
-        preprocess();
-
+        movies15 = await response.json();
         buildDictionary();
-
         initGenreMenu();
-
+        dataReady = true;
         console.log("Data Loaded");
 
     } catch (err) {
@@ -66,123 +59,6 @@ async function loadData() {
 
 }
 
-// --------------------
-// Papa Parse
-// --------------------
-
-function loadCSV(path) {
-
-    return new Promise((resolve, reject) => {
-
-        Papa.parse(path, {
-
-            download: true,
-
-            header: true,
-
-            dynamicTyping: true,
-
-            skipEmptyLines: true,
-
-            complete(results) {
-
-                resolve(results.data);
-
-            },
-
-            error(err) {
-
-                reject(err);
-
-            }
-
-        });
-
-    });
-
-}
-
-// --------------------
-// Preprocess
-// --------------------
-
-function preprocess() {
-
-    const creditMap = new Map();
-
-    credits.forEach(item => {
-
-        creditMap.set(item.movie_id, item);
-
-    });
-
-    const merged = [];
-
-    movies.forEach(movie => {
-
-        const credit = creditMap.get(movie.id);
-
-        if (!credit) return;
-
-        movie.genres = JSON.parse(movie.genres);
-
-        credit.cast = JSON.parse(credit.cast);
-
-        credit.crew = JSON.parse(credit.crew);
-
-        movie.genres = extractName(movie.genres);
-
-        movie.actors = credit.cast
-            .slice(0, 4)
-            .map(actor => actor.name);
-
-        movie.director =
-            extractDirector(
-                credit.crew,
-                "Director"
-            );
-
-        if (
-
-            movie.vote_count <= 40 ||
-
-            movie.vote_average == 0 ||
-
-            movie.popularity == 0 ||
-
-            movie.revenue == 0 ||
-
-            movie.budget == 0 ||
-
-            movie.director == ""
-
-        ) {
-
-            return;
-
-        }
-
-        merged.push({
-
-            title: movie.title,
-
-            genres: movie.genres,
-
-            actors: movie.actors,
-
-            director: movie.director,
-
-            vote_average: Number(movie.vote_average)
-
-        });
-
-    });
-
-    movies15 = merged;
-
-    console.log("Movies:", movies15.length);
-
-}
 
 // --------------------
 // Extract Name
@@ -482,6 +358,11 @@ document.addEventListener("DOMContentLoaded", () => {
 // --------------------
 // Read Input
 // --------------------
+
+if (!dataReady) {
+    alert("Data is still loading.");
+    return;
+}
 
 function predictMovie() {
 
