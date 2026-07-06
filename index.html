@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Rating Predictor</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="card">
+
+            <h1>🎬 Movie Rating Predictor</h1>
+
+            <p class="subtitle">
+                Enter your movie information and predict its IMDb-style rating.
+            </p>
+
+            <hr>
+
+            <h2>Movie Genres</h2>
+
+            <div class="genre-grid">
+
+                <select id="genre1">
+                    <option value="">Genre 1</option>
+                </select>
+
+                <select id="genre2">
+                    <option value="">Genre 2</option>
+                </select>
+
+                <select id="genre3">
+                    <option value="">Genre 3</option>
+                </select>
+
+                <select id="genre4">
+                    <option value="">Genre 4</option>
+                </select>
+
+                <select id="genre5">
+                    <option value="">Genre 5</option>
+                </select>
+
+            </div>
+
+            <hr>
+
+            <h2>Director</h2>
+
+            <input
+                type="text"
+                id="director"
+                placeholder="e.g. Christopher Nolan">
+
+            <hr>
+
+            <h2>Actors</h2>
+
+            <div class="actor-grid">
+
+                <input
+                    type="text"
+                    id="actor1"
+                    placeholder="Actor 1">
+
+                <input
+                    type="text"
+                    id="actor2"
+                    placeholder="Actor 2">
+
+                <input
+                    type="text"
+                    id="actor3"
+                    placeholder="Actor 3">
+
+                <input
+                    type="text"
+                    id="actor4"
+                    placeholder="Actor 4">
+
+                <input
+                    type="text"
+                    id="actor5"
+                    placeholder="Actor 5">
+
+            </div>
+
+            <button id="predictBtn">
+                Predict Rating
+            </button>
+
+            <div id="loading" class="loading hidden">
+                Calculating...
+            </div>
+
+            <div class="result-card">
+
+                <h2>Prediction Result</h2>
+
+                <div id="score" class="score">
+                    --
+                </div>
+
+                <div id="stars" class="stars">
+                    ☆☆☆☆☆
+                </div>
+
+                <p id="description">
+                    Please fill in the information above.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
