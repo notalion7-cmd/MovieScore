@@ -359,12 +359,13 @@ document.addEventListener("DOMContentLoaded", () => {
 // Read Input
 // --------------------
 
-if (!dataReady) {
-    alert("Data is still loading.");
-    return;
-}
-
 function predictMovie() {
+
+    if (!dataReady) {
+        alert("Data is still loading.");
+        return;
+    }
+
 
     const loading = document.getElementById("loading");
 
