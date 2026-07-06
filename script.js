@@ -466,26 +466,25 @@ function generateStars(score) {
 // Rating Description
 // --------------------
 
-function getDescription(score) {
+// --------------------
+// Rating Description
+// --------------------
 
+function getDescription(score) {
     score = Number(score);
 
-    if (score >= 8.5)
-
+    if (score >= 8.5) {
         return "Excellent! This movie has very high predicted audience satisfaction.";
-
-    if (score >= 7.5)
-
+    }
+    if (score >= 7.5) {
         return "Very Good. It has strong potential.";
-
-    if (score >= 6.5)
-
+    }
+    if (score >= 6.5) {
         return "Good. An above-average movie.";
-
-    if (score >= 5.5)
-
+    }
+    if (score >= 5.5) {
         return "Average. It may appeal to specific audiences.";
+    }
 
     return "Below average. Consider improving the cast or genre combination.";
-
-}
+} // 确保这里是文件的绝对末尾，后面没有任何多余的“}”
