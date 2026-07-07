@@ -93,72 +93,58 @@ function extractDirector(crew, job) {
 // --------------------
 
 function buildDictionary() {
-
+    // 1. 收集 Genres (和 Python 保持一致)
     const genreSet = new Set();
-
-    const actorSet = new Set();
-
-    const directorSet = new Set();
-
     movies15.forEach(movie => {
-
         movie.genres.forEach(g => genreSet.add(g));
-
-        movie.actors.forEach(a => actorSet.add(a));
-
-        directorSet.add(movie.director);
-
     });
+    genres = Array.from(genreSet); // 对应 Python 的 genres.index
 
-    genres = Array.from(genreSet);
+    // 2. 收集 Directors 并按照出现次数倒序排列 (完全复刻 Python 的 groupby().sort_values())
+    const dirCounts = {};
+    movies15.forEach(movie => {
+        dirCounts[movie.director] = (dirCounts[movie.director] || 0) + 1;
+    });
+    // 转成数组并按次数降序排列
+    directors = Object.keys(dirCounts).sort((a, b) => dirCounts[b] - dirCounts[a]);
 
+    // 3. 收集 Actors (和 Python 保持一致)
+    const actorSet = new Set();
+    movies15.forEach(movie => {
+        movie.actors.forEach(a => actorSet.add(a));
+    });
     actors = Array.from(actorSet);
 
-    directors = Array.from(directorSet);
+    // 4. 为历史数据集生成二进制向量
+    movies15.forEach((movie, idx) => {
+        // 记录原始索引，用于在排序平局时严格对齐 Python
+        movie.original_index = idx; 
 
-    genres.forEach((g, i) => {
-
-        genreIndex.set(g, i);
-
+        movie.genres_bin = binaryForPython(genres, movie.genres);
+        // 还原 Python 隐式引发的 bug：movie.director 是字符串，用子串匹配
+        movie.director_bin = binaryForPython(directors, movie.director); 
+        movie.actors_bin = binaryForPython(actors, movie.actors);
     });
+}
 
-    actors.forEach((a, i) => {
-
-        actorIndex.set(a, i);
-
-    });
-
-    directors.forEach((d, i) => {
-
-        directorIndex.set(d, i);
-
-    });
-
-    movies15.forEach(movie => {
-
-        movie.genres_bin =
-            binary(
-                genres.length,
-                genreIndex,
-                movie.genres
-            );
-
-        movie.actors_bin =
-            binary(
-                actors.length,
-                actorIndex,
-                movie.actors
-            );
-
-        movie.director_bin =
-            binary(
-                directors.length,
-                directorIndex,
-                [movie.director]
-            );
-
-    });
-
+// 模拟 Python 的 binary 函数
+function binaryForPython(dictArray, rowValue) {
+    const vector = [];
+    for (let i = 0; i < dictArray.length; i++) {
+        const word = dictArray[i];
+        
+        if (Array.isArray(rowValue)) {
+            // 如果是数组 (如 genres, actors)，检查是否包含该元素
+            if (rowValue.includes(word)) vector.push(1);
+            else vector.push(0);
+        } else {
+            // 如果是字符串 (如 Python 编码历史电影时的 director 字符串)
+            // Python 中: word in "导演名"
+            if (rowValue && rowValue.includes(word)) vector.push(1);
+            else vector.push(0);
+        }
+    }
+    return vector;
 }
 // ==========================================================
 // Part 2
@@ -254,51 +240,56 @@ function angle(movie1, movie2) {
 // --------------------
 
 function predictor(newMovie) {
-
-    newMovie.genres_bin = binary(
-        genres.length,
-        genreIndex,
-        newMovie.genres
-    );
-
-    newMovie.director_bin = binary(
-        directors.length,
-        directorIndex,
-        [newMovie.director]
-    );
-
-    newMovie.actors_bin = binary(
-        actors.length,
-        actorIndex,
-        newMovie.actors
-    );
+    // 新输入的 newMovie.director 是纯字符串，传给 binaryForPython 
+    // 因为 Python 里的输入被包装成了列表 ['导演名']，所以这里我们传一个数组模拟列表匹配
+    const newMovieGenresBin = binaryForPython(genres, newMovie.genres);
+    const newMovieDirectorBin = binaryForPython(directors, [newMovie.director]); 
+    const newMovieActorsBin = binaryForPython(actors, newMovie.actors);
 
     const vote = movies15.map(movie => {
+        let total = 0;
+        
+        // 计算余弦距离
+        total += cosineDistance(movie.genres_bin, newMovieGenresBin);
+        total += cosineDistance(movie.director_bin, newMovieDirectorBin);
+        total += cosineDistance(movie.actors_bin, newMovieActorsBin);
 
         return {
-
-            ...movie,
-
-            angle: angle(movie, newMovie)
-
+            vote_average: movie.vote_average,
+            angle: total,
+            original_index: movie.original_index // 留作平局依据
         };
-
     });
 
-    vote.sort((a, b) => a.angle - b.angle);
+    // 排序：距离小的优先；如果距离一样，严格按原始数据集的索引顺序排（复刻 Pandas 表现）
+    vote.sort((a, b) => {
+        if (Math.abs(a.angle - b.angle) < 1e-9) {
+            return a.original_index - b.original_index;
+        }
+        return a.angle - b.angle;
+    });
 
     let sum = 0;
-
     const topN = 5;
-
     for (let i = 0; i < topN; i++) {
-
         sum += vote[i].vote_average;
-
     }
 
     return Number((sum / topN).toFixed(2));
+}
 
+// 别忘了修复 cosineDistance 里面处理 1 not in b1 的边界
+function cosineDistance(v1, v2) {
+    if (!v1.includes(1) || !v2.includes(1)) {
+        return 1;
+    }
+    let dot = 0, norm1 = 0, norm2 = 0;
+    for (let i = 0; i < v1.length; i++) {
+        dot += v1[i] * v2[i];
+        norm1 += v1[i] * v1[i];
+        norm2 += v2[i] * v2[i];
+    }
+    return 1 - dot / (Math.sqrt(norm1) * Math.sqrt(norm2));
 }
 
 // --------------------
