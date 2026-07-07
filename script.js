@@ -34,9 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // --------------------
 
 async function loadData() {
-
     try {
-
         const response = await fetch("movies_processed.json");
 
         if (!response.ok) {
@@ -50,24 +48,17 @@ async function loadData() {
         console.log("Data Loaded");
 
     } catch (err) {
-
         console.error(err);
-
         alert("Cannot load csv.");
-
     }
-
 }
-
 
 // --------------------
 // Extract Name
 // --------------------
 
 function extractName(list) {
-
     return list.map(item => item.name);
-
 }
 
 // --------------------
@@ -75,17 +66,11 @@ function extractName(list) {
 // --------------------
 
 function extractDirector(crew, job) {
-
     for (const person of crew) {
-
         if (person.job === job)
-
             return person.name;
-
     }
-
     return "";
-
 }
 
 // --------------------
@@ -117,35 +102,17 @@ function buildDictionary() {
 
     // 4. 为历史数据集生成二进制向量
     movies15.forEach((movie, idx) => {
-        // 记录原始索引，用于在排序平局时严格对齐 Python
+        // 记录原始索引，用于在排序平局时严格对齐 Python 的 Pandas 默认顺序
         movie.original_index = idx; 
 
         movie.genres_bin = binaryForPython(genres, movie.genres);
-        // 还原 Python 隐式引发的 bug：movie.director 是字符串，用子串匹配
+        // 还原 Python 隐式引发的逻辑：movie.director 是字符串，用包含匹配
         movie.director_bin = binaryForPython(directors, movie.director); 
         movie.actors_bin = binaryForPython(actors, movie.actors);
     });
 }
 
-// 模拟 Python 的 binary 函数
-function binaryForPython(dictArray, rowValue) {
-    const vector = [];
-    for (let i = 0; i < dictArray.length; i++) {
-        const word = dictArray[i];
-        
-        if (Array.isArray(rowValue)) {
-            // 如果是数组 (如 genres, actors)，检查是否包含该元素
-            if (rowValue.includes(word)) vector.push(1);
-            else vector.push(0);
-        } else {
-            // 如果是字符串 (如 Python 编码历史电影时的 director 字符串)
-            // Python 中: word in "导演名"
-            if (rowValue && rowValue.includes(word)) vector.push(1);
-            else vector.push(0);
-        }
-    }
-    return vector;
-}
+
 // ==========================================================
 // Part 2
 // Binary + Cosine Distance + Predictor (Strict Python Alignment)
@@ -166,7 +133,6 @@ function binaryForPython(dictArray, rowValue) {
             const val = valuesToMatch[j];
             if (val && typeof val === "string") {
                 // 完美复刻 Python 的: if word in string_value / word in list_of_strings
-                // 无论是单字符串还是列表，Python 核心比对都是 word 是否包含在其中
                 if (val.includes(word)) {
                     isMatch = true;
                     break;
@@ -260,38 +226,28 @@ function predictor(newMovie) {
 // --------------------
 
 function initGenreMenu() {
-
     const ids = [
-
         "genre1",
         "genre2",
         "genre3",
         "genre4",
         "genre5"
-
     ];
 
     ids.forEach(id => {
-
         const select = document.getElementById(id);
-
         genres.forEach(g => {
-
             const option = document.createElement("option");
-
             option.value = g;
-
             option.textContent = g;
-
             select.appendChild(option);
-
         });
-
     });
 
     console.log("Genre Menu Ready.");
-
 }
+
+
 // ==========================================================
 // Part 3
 // UI + Predict Button
@@ -302,11 +258,8 @@ function initGenreMenu() {
 // --------------------
 
 document.addEventListener("DOMContentLoaded", () => {
-
     const btn = document.getElementById("predictBtn");
-
     btn.addEventListener("click", predictMovie);
-
 });
 
 // --------------------
@@ -314,27 +267,21 @@ document.addEventListener("DOMContentLoaded", () => {
 // --------------------
 
 function predictMovie() {
-
     if (!dataReady) {
         alert("Data is still loading.");
         return;
     }
 
-
     const loading = document.getElementById("loading");
-
     loading.classList.remove("hidden");
 
     setTimeout(() => {
-
         const genresInput = [
-
             document.getElementById("genre1").value,
             document.getElementById("genre2").value,
             document.getElementById("genre3").value,
             document.getElementById("genre4").value,
             document.getElementById("genre5").value
-
         ].filter(g => g !== "");
 
         const director = document
@@ -343,35 +290,25 @@ function predictMovie() {
             .trim();
 
         const actorsInput = [
-
             document.getElementById("actor1").value,
             document.getElementById("actor2").value,
             document.getElementById("actor3").value,
             document.getElementById("actor4").value,
             document.getElementById("actor5").value
-
         ]
         .map(a => a.trim())
         .filter(a => a !== "");
 
         const movie = {
-
             genres: genresInput,
-
             director: director,
-
             actors: actorsInput
-
         };
 
         const score = predictor(movie);
-
         updateResult(score);
-
         loading.classList.add("hidden");
-
     }, 100);
-
 }
 
 // --------------------
@@ -379,15 +316,9 @@ function predictMovie() {
 // --------------------
 
 function updateResult(score) {
-
     document.getElementById("score").textContent = score;
-
-    document.getElementById("stars").textContent =
-        generateStars(score);
-
-    document.getElementById("description").textContent =
-        getDescription(score);
-
+    document.getElementById("stars").textContent = generateStars(score);
+    document.getElementById("description").textContent = getDescription(score);
 }
 
 // --------------------
@@ -395,30 +326,16 @@ function updateResult(score) {
 // --------------------
 
 function generateStars(score) {
-
     const fullStars = Math.round(score / 2);
-
     let result = "";
-
     for (let i = 0; i < 5; i++) {
-
         if (i < fullStars)
-
             result += "★";
-
         else
-
             result += "☆";
-
     }
-
     return result;
-
 }
-
-// --------------------
-// Rating Description
-// --------------------
 
 // --------------------
 // Rating Description
@@ -441,4 +358,4 @@ function getDescription(score) {
     }
 
     return "Below average. Consider improving the cast or genre combination.";
-} // 确保这里是文件的绝对末尾，后面没有任何多余的“}”
+}
