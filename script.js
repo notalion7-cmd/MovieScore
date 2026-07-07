@@ -345,17 +345,17 @@ function getDescription(score) {
     score = Number(score);
 
     if (score >= 8.5) {
-        return "Excellent! This movie has very high predicted audience satisfaction.";
+        return "太好了！这部电影预计会很受观众欢迎！";
     }
     if (score >= 7.5) {
-        return "Very Good. It has strong potential.";
+        return "很有潜力的一部电影";
     }
     if (score >= 6.5) {
-        return "Good. An above-average movie.";
+        return "已经超出平均了";
     }
     if (score >= 5.5) {
-        return "Average. It may appeal to specific audiences.";
+        return "一般般，可能会有特定的人被它吸引";
     }
 
-    return "Below average. Consider improving the cast or genre combination.";
+    return "可能不太好看";
 }
