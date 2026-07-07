@@ -148,108 +148,84 @@ function binaryForPython(dictArray, rowValue) {
 }
 // ==========================================================
 // Part 2
-// Binary + Cosine Distance + Predictor
+// Binary + Cosine Distance + Predictor (Strict Python Alignment)
 // ==========================================================
 
-// --------------------
-// Binary Vector
-// --------------------
+// 统一的、模拟 Python 'in' 关键字的向量生成函数
+function binaryForPython(dictArray, rowValue) {
+    const vector = [];
+    
+    // 确保 rowValue 统一转为处理数组
+    const valuesToMatch = Array.isArray(rowValue) ? rowValue : [rowValue];
 
-function binary(size, indexMap, values) {
+    for (let i = 0; i < dictArray.length; i++) {
+        const word = dictArray[i];
+        let isMatch = false;
 
-    const vector = new Array(size).fill(0);
-
-    values.forEach(value => {
-
-        const index = indexMap.get(value);
-
-        if (index !== undefined) {
-
-            vector[index] = 1;
-
+        for (let j = 0; j < valuesToMatch.length; j++) {
+            const val = valuesToMatch[j];
+            if (val && typeof val === "string") {
+                // 完美复刻 Python 的: if word in string_value / word in list_of_strings
+                // 无论是单字符串还是列表，Python 核心比对都是 word 是否包含在其中
+                if (val.includes(word)) {
+                    isMatch = true;
+                    break;
+                }
+            }
         }
-
-    });
-
+        vector.push(isMatch ? 1 : 0);
+    }
     return vector;
-
 }
 
-// --------------------
-// Cosine Distance
-// 等价于 scipy.spatial.distance.cosine()
-// --------------------
-
+// 唯一的 Cosine Distance 函数，严格包含 Python 边界条件 (1 not in b1 or 1 not in b2)
 function cosineDistance(v1, v2) {
+    // 对应 Python 的: if (1 not in b1) or (1 not in b2): return 1
+    if (!v1.includes(1) || !v2.includes(1)) {
+        return 1;
+    }
 
     let dot = 0;
-
     let norm1 = 0;
-
     let norm2 = 0;
 
     for (let i = 0; i < v1.length; i++) {
-
         dot += v1[i] * v2[i];
-
         norm1 += v1[i] * v1[i];
-
         norm2 += v2[i] * v2[i];
-
     }
 
     if (norm1 === 0 || norm2 === 0) {
-
         return 1;
-
     }
 
     return 1 - dot / (Math.sqrt(norm1) * Math.sqrt(norm2));
-
 }
 
 // --------------------
 // Python angle()
 // --------------------
-
 function angle(movie1, movie2) {
-
     let total = 0;
-
-    total += cosineDistance(
-        movie1.genres_bin,
-        movie2.genres_bin
-    );
-
-    total += cosineDistance(
-        movie1.director_bin,
-        movie2.director_bin
-    );
-
-    total += cosineDistance(
-        movie1.actors_bin,
-        movie2.actors_bin
-    );
-
+    total += cosineDistance(movie1.genres_bin, movie2.genres_bin);
+    total += cosineDistance(movie1.director_bin, movie2.director_bin);
+    total += cosineDistance(movie1.actors_bin, movie2.actors_bin);
     return total;
-
 }
 
 // --------------------
 // Python predictor()
 // --------------------
-
 function predictor(newMovie) {
-    // 新输入的 newMovie.director 是纯字符串，传给 binaryForPython 
-    // 因为 Python 里的输入被包装成了列表 ['导演名']，所以这里我们传一个数组模拟列表匹配
+    // 新片和历史电影采用完全相同的二值化判定，消除单字符串与数组的内部不一致
     const newMovieGenresBin = binaryForPython(genres, newMovie.genres);
-    const newMovieDirectorBin = binaryForPython(directors, [newMovie.director]); 
+    const newMovieDirectorBin = binaryForPython(directors, newMovie.director); 
     const newMovieActorsBin = binaryForPython(actors, newMovie.actors);
 
     const vote = movies15.map(movie => {
         let total = 0;
         
-        // 计算余弦距离
+        // 计算总余弦距离
         total += cosineDistance(movie.genres_bin, newMovieGenresBin);
         total += cosineDistance(movie.director_bin, newMovieDirectorBin);
         total += cosineDistance(movie.actors_bin, newMovieActorsBin);
@@ -257,11 +233,11 @@ function predictor(newMovie) {
         return {
             vote_average: movie.vote_average,
             angle: total,
-            original_index: movie.original_index // 留作平局依据
+            original_index: movie.original_index
         };
     });
 
-    // 排序：距离小的优先；如果距离一样，严格按原始数据集的索引顺序排（复刻 Pandas 表现）
+    // 严格按照余弦距离升序排列；如果距离完全相等，则按照原始索引升序排（稳定排序，复刻 Pandas）
     vote.sort((a, b) => {
         if (Math.abs(a.angle - b.angle) < 1e-9) {
             return a.original_index - b.original_index;
@@ -275,21 +251,8 @@ function predictor(newMovie) {
         sum += vote[i].vote_average;
     }
 
+    // 返回与 Python np.mean() 后 round(x, 2) 相同精度的数值
     return Number((sum / topN).toFixed(2));
-}
-
-// 别忘了修复 cosineDistance 里面处理 1 not in b1 的边界
-function cosineDistance(v1, v2) {
-    if (!v1.includes(1) || !v2.includes(1)) {
-        return 1;
-    }
-    let dot = 0, norm1 = 0, norm2 = 0;
-    for (let i = 0; i < v1.length; i++) {
-        dot += v1[i] * v2[i];
-        norm1 += v1[i] * v1[i];
-        norm2 += v2[i] * v2[i];
-    }
-    return 1 - dot / (Math.sqrt(norm1) * Math.sqrt(norm2));
 }
 
 // --------------------
