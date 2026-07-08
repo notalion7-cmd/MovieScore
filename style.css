@@ -161,3 +161,30 @@ button:active {
     }
 
 }
+.button-group{
+    display:flex;
+    gap:20px;
+}
+
+.button-group button{
+    flex:1;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;      /* 按钮之间的间距 */
+    margin-top: 30px;
+}
+
+.button-group button {
+    margin-top: 0;   /* 抵消掉原本的顶部外边距 */
+    flex: 1;         /* 让两个按钮平分宽度 */
+}
+
+/* 可以让线性回归按钮换个颜色（比如原生态绿），用来和余弦按钮区分开 */
+#linearBtn {
+    background: #2ecc71;
+}
+#linearBtn:hover {
+    background: #27ae60;
+}
