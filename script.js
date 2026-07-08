@@ -140,10 +140,10 @@ function predictorCosine(newMovie) {
 
 // 算法 2: 线性回归模型参数 (由 Python 回归模型导出的硬编码权重)
 const REGRESSION_WEIGHTS = {
-    intercept: 5.85,       // 基础分
-    genreWeight: 0.15,     // 每个题材的边际加分
-    directorWeight: 0.45,  // 熟面孔导演加成
-    actorWeight: 0.08,     // 熟面孔演员加成
+    intercept: 6.54,       // 基础分
+    genreWeight: -0.03,     // 每个题材的边际加分
+    directorWeight: 0.59,  // 熟面孔导演加成
+    actorWeight: -0.15,     // 熟面孔演员加成
     
     getDirectorScore: function(dirName) {
         if (!dirName) return 0;
